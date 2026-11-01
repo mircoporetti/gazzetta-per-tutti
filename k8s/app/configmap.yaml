@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: gazzetta-config
 data:
-  PHX_HOST: gazzetta.mircoporetti.me
+  PHX_HOST: gazzetta-per-tutti.mircoporetti.me
   PORT: "4000"
   POOL_SIZE: "5"
   SUMMARIZER: openai
