@@ -15,6 +15,10 @@ defmodule GazzettaPerTuttiWeb.Router do
   end
 
   scope "/", GazzettaPerTuttiWeb do
+    get "/health", HealthController, :show
+  end
+
+  scope "/", GazzettaPerTuttiWeb do
     pipe_through :browser
 
     live "/", ActsLive

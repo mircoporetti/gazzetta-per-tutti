@@ -35,3 +35,13 @@ mix test
 Tests describe behaviour through the public API (`GazzettaPerTutti`) and the
 LiveView, with the Gazzetta and the summarizer mocked and a real database.
 Adapters are tested against responses recorded from the real website.
+
+## Deploy
+
+Pushes to `main` run the tests and push `ghcr.io/mircoporetti/gazzetta-per-tutti:<timestamp>-<sha>`
+(`.github/workflows/deploy.yml`). Flux in the cluster (configured in the `homelab`
+repo, `clusters/hogwarts-kitchen/gazzetta`) picks up the new tag, commits it to
+`k8s/app` and applies it. Migrations run in an init container.
+
+Secrets are applied by hand once: copy `k8s/app/secrets.example.yaml` to
+`k8s/app/secrets.yaml` (gitignored), fill it in, `kubectl apply -f k8s/app/secrets.yaml`.

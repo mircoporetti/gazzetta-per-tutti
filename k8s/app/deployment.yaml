@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gazzetta
+  labels:
+    app: gazzetta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gazzetta
+  template:
+    metadata:
+      labels:
+        app: gazzetta
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+      initContainers:
+        - name: migrate
+          image: ghcr.io/mircoporetti/gazzetta-per-tutti:latest # {"$imagepolicy": "flux-system:gazzetta-per-tutti"}
+          command: ["/app/bin/migrate"]
+          envFrom:
+            - configMapRef:
+                name: gazzetta-config
+            - secretRef:
+                name: gazzetta-secrets
+          env:
+            - name: DATABASE_URL
+              value: ecto://gazzetta:$(DB_PASSWORD)@postgres/gazzetta
+            - name: RELEASE_TMP
+              value: /tmp
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: gazzetta
+          image: ghcr.io/mircoporetti/gazzetta-per-tutti:latest # {"$imagepolicy": "flux-system:gazzetta-per-tutti"}
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+                name: gazzetta-config
+            - secretRef:
+                name: gazzetta-secrets
+          env:
+            - name: DATABASE_URL
+              value: ecto://gazzetta:$(DB_PASSWORD)@postgres/gazzetta
+            - name: RELEASE_TMP
+              value: /tmp
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gazzetta
+spec:
+  selector:
+    app: gazzetta
+  ports:
+    - port: 80
+      targetPort: 4000

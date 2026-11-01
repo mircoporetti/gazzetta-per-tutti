@@ -39,3 +39,6 @@ npm-debug.log
 # IntelliJ
 /.idea/
 *.iml
+
+# Real Kubernetes secrets (see k8s/app/secrets.example.yaml)
+/k8s/app/secrets.yaml
