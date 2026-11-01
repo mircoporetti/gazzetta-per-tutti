@@ -22,7 +22,7 @@ spec:
         runAsGroup: 65534
       initContainers:
         - name: migrate
-          image: ghcr.io/mircoporetti/gazzetta-per-tutti:1793562033-ed52b51 # {"$imagepolicy": "flux-system:gazzetta-per-tutti"}
+          image: ghcr.io/mircoporetti/gazzetta-per-tutti:1793563982-ea197a5 # {"$imagepolicy": "flux-system:gazzetta-per-tutti"}
           command: ["/app/bin/migrate"]
           envFrom:
             - configMapRef:
@@ -44,7 +44,7 @@ spec:
               mountPath: /tmp
       containers:
         - name: gazzetta
-          image: ghcr.io/mircoporetti/gazzetta-per-tutti:1793562033-ed52b51 # {"$imagepolicy": "flux-system:gazzetta-per-tutti"}
+          image: ghcr.io/mircoporetti/gazzetta-per-tutti:1793563982-ea197a5 # {"$imagepolicy": "flux-system:gazzetta-per-tutti"}
           ports:
             - containerPort: 4000
           envFrom:
