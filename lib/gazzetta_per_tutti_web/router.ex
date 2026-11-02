@@ -22,6 +22,7 @@ defmodule GazzettaPerTuttiWeb.Router do
     pipe_through :browser
 
     live "/", ActsLive
+    live "/glossario", GlossaryLive
   end
 
   # Other scopes may use custom stacks.

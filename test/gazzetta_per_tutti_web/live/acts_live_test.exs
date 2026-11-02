@@ -103,4 +103,41 @@ defmodule GazzettaPerTuttiWeb.ActsLiveTest do
 
     assert html =~ "Fa fede solo il testo pubblicato nella Gazzetta Ufficiale"
   end
+
+  test "a reader can find out what an act type means, right on the card", %{conn: conn} do
+    published_in_gazzetta([law()])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    assert has_element?(view, "#act-26G00217 .act-type summary", "Decreto legislativo")
+
+    assert has_element?(
+             view,
+             "#act-26G00217 .act-type-definition",
+             "Ha la stessa forza di una legge"
+           )
+  end
+
+  test "an unusual act type is shown without a definition", %{conn: conn} do
+    published_in_gazzetta([law(heading: "ATTO STRANO 9 ottobre 2026")])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    assert has_element?(view, "#act-26G00217 .act-type-badge", "Atto strano")
+    refute has_element?(view, "#act-26G00217 .act-type")
+  end
+
+  test "a reader can open the glossary and get back to the acts", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    {:ok, glossary, _html} =
+      view |> element("#glossary-link") |> render_click() |> follow_redirect(conn)
+
+    assert has_element?(glossary, "#gazzetta-ufficiale dt", "Gazzetta Ufficiale")
+    assert has_element?(glossary, "#decreto-legge dd", "entro 60 giorni")
+    assert has_element?(glossary, "#comunicato dd", "Un avviso ufficiale")
+
+    {:ok, _view, _html} =
+      glossary |> element("#back-to-acts") |> render_click() |> follow_redirect(conn, ~p"/")
+  end
 end

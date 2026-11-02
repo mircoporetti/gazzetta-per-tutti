@@ -2,6 +2,7 @@ defmodule GazzettaPerTuttiWeb.ActsLive do
   use GazzettaPerTuttiWeb, :live_view
 
   alias GazzettaPerTutti.Act
+  alias GazzettaPerTutti.Glossary
 
   @page_size 20
   @months ~w(gennaio febbraio marzo aprile maggio giugno luglio agosto settembre ottobre novembre dicembre)
@@ -117,6 +118,13 @@ defmodule GazzettaPerTuttiWeb.ActsLive do
       <p class="mt-14 border-t border-stone-200 pt-6 text-xs leading-relaxed text-stone-500 dark:border-stone-800 dark:text-stone-400">
         Le spiegazioni sono generate automaticamente da un'intelligenza artificiale e possono contenere
         imprecisioni. Fa fede solo il testo pubblicato nella Gazzetta Ufficiale.
+        Non conosci una parola? <.link
+          id="glossary-link"
+          navigate={~p"/glossario"}
+          class="font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+        >
+          Leggi il glossario
+        </.link>.
       </p>
     </Layouts.app>
     """
@@ -158,15 +166,7 @@ defmodule GazzettaPerTuttiWeb.ActsLive do
       )
     ]}>
       <header class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span class={[
-          "rounded-full px-2.5 py-0.5 font-semibold uppercase tracking-wide",
-          if(@act.law,
-            do: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300",
-            else: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300"
-          )
-        ]}>
-          {@act.type}
-        </span>
+        <.act_type act={@act} />
         <time datetime={Date.to_iso8601(@act.published_on)} class="text-stone-500 dark:text-stone-400">
           {format_date(@act.published_on)}
         </time>
@@ -205,6 +205,60 @@ defmodule GazzettaPerTuttiWeb.ActsLive do
       </a>
     </article>
     """
+  end
+
+  attr :act, Act, required: true
+
+  defp act_type(assigns) do
+    assigns = assign(assigns, :definition, Glossary.act_type(assigns.act))
+
+    ~H"""
+    <%= if @definition do %>
+      <%!-- Clicking outside or pressing Escape closes the definition --%>
+      <details
+        id={"act-type-#{@act.code}"}
+        class="act-type group/term relative"
+        phx-click-away={JS.remove_attribute("open")}
+        phx-window-keydown={JS.remove_attribute("open")}
+        phx-key="Escape"
+      >
+        <summary class={[
+          act_type_badge_class(@act),
+          "inline-flex cursor-pointer list-none items-center gap-1 transition hover:ring-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 [&::-webkit-details-marker]:hidden",
+          if(@act.law,
+            do: "hover:ring-emerald-200 dark:hover:ring-emerald-800",
+            else: "hover:ring-stone-200 dark:hover:ring-stone-700"
+          )
+        ]}>
+          {@act.type}
+          <.icon name="hero-question-mark-circle-mini" class="size-3.5 opacity-60" />
+          <span class="sr-only">: che cos'è?</span>
+        </summary>
+        <div class="act-type-definition absolute left-0 top-full z-10 mt-2 w-80 max-w-[calc(100vw-4rem)] rounded-xl border border-stone-200 bg-white p-4 text-sm normal-case leading-relaxed tracking-normal text-stone-700 shadow-lg motion-safe:transition dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200">
+          <p class="font-semibold text-stone-900 dark:text-stone-50">{@act.type}</p>
+          <p class="mt-1">{@definition}</p>
+          <.link
+            navigate={~p"/glossario##{Glossary.act_type_anchor(@act)}"}
+            class="mt-2 inline-block text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+          >
+            Altre parole nel glossario
+          </.link>
+        </div>
+      </details>
+    <% else %>
+      <span class={act_type_badge_class(@act)}>{@act.type}</span>
+    <% end %>
+    """
+  end
+
+  defp act_type_badge_class(act) do
+    [
+      "act-type-badge rounded-full px-2.5 py-0.5 font-semibold uppercase tracking-wide",
+      if(act.law,
+        do: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300",
+        else: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300"
+      )
+    ]
   end
 
   defp format_date(%Date{day: day, month: month, year: year}),
